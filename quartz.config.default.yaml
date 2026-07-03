@@ -1,13 +1,13 @@
 # yaml-language-server: $schema=./quartz/plugins/quartz-plugins.schema.json
 configuration:
-  pageTitle: Quartz 5
+  pageTitle: Hajun's Study Notes
   pageTitleSuffix: ""
   enableSPA: true
   enablePopovers: true
   analytics:
     provider: plausible
-  locale: en-US
-  baseUrl: quartz.jzhao.xyz
+  locale: ko-KR
+  baseUrl: hajun011103.github.io/study
   ignorePatterns:
     - private
     - templates
@@ -17,7 +17,7 @@ configuration:
     cdnCaching: true
     typography:
       header: Schibsted Grotesk
-      body: Source Sans Pro
+      body: Noto Sans KR
       code: IBM Plex Mono
     colors:
       lightMode:
