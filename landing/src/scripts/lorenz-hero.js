@@ -10,13 +10,12 @@ const SIGMA = 10;
 const RHO = 28;
 const BETA = 8 / 3;
 const SCALE = 0.076; // lorenz units -> world units
-const CENTER_Z = 27; // vertical center of the attractor in lorenz space
+const CENTER_Z = 23.83; // density centroid of z (measured) -> screen center
 const TIME_SCALE = 0.14; // real seconds -> lorenz time
 const MAX_STEP = 0.009; // Euler stability cap per frame
 const POINTER_RADIUS = 0.72; // world-space radius of the hover turbulence
 const SWIRL = 2.1; // hover swirl strength (world units / s)
 const PUSH = 0.88; // hover outward push strength (world units / s)
-const ROLL = -0.17; // camera roll (rad) to straighten the attractor's lean
 
 const hero = document.querySelector(".hero");
 const canvas = document.getElementById("lorenz-canvas");
@@ -119,7 +118,6 @@ function start() {
     const radius = 2.9;
     camera.position.set(Math.sin(orbit) * radius, 0.4, Math.cos(orbit) * radius);
     camera.lookAt(0, 0, 0);
-    camera.rotateZ(ROLL);
     camera.updateMatrixWorld();
   }
 
