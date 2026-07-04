@@ -1,0 +1,22 @@
+# dependencies
+**/node_modules/
+
+# Astro landing build output
+landing/dist/
+landing/.astro/
+
+# Quartz build output / cache
+notes/public/
+notes/.quartz-cache/
+
+# merged site output (created by CI)
+_site/
+
+# NOTE: vault-sourced notes under notes/content/{study,research,projects}/ are
+# intentionally NOT ignored here. Quartz's file globbing respects .gitignore, so
+# ignoring them would also hide them from the build. They are kept out of local
+# commits via .git/info/exclude instead; CI copies them fresh and never commits.
+
+# misc
+.DS_Store
+*.log
