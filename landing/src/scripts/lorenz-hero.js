@@ -9,9 +9,9 @@ import * as THREE from "three";
 const SIGMA = 10;
 const RHO = 28;
 const BETA = 8 / 3;
-const SCALE = 0.066; // lorenz units -> world units
+const SCALE = 0.076; // lorenz units -> world units
 const CENTER_Z = 27; // vertical center of the attractor in lorenz space
-const TIME_SCALE = 0.25; // real seconds -> lorenz time
+const TIME_SCALE = 0.14; // real seconds -> lorenz time
 const MAX_STEP = 0.009; // Euler stability cap per frame
 const POINTER_RADIUS = 0.72; // world-space radius of the hover turbulence
 const SWIRL = 2.1; // hover swirl strength (world units / s)
@@ -115,7 +115,7 @@ function start() {
   function updateCamera(elapsed, delta) {
     const target = -0.4 + elapsed * 0.04 + window.scrollY * 0.0026;
     orbit += (target - orbit) * Math.min(1, delta * 4);
-    const radius = 3.1;
+    const radius = 2.9;
     camera.position.set(Math.sin(orbit) * radius, 0.4, Math.cos(orbit) * radius);
     camera.lookAt(0, 0, 0);
     camera.updateMatrixWorld();
