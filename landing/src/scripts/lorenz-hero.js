@@ -13,6 +13,7 @@ const SCALE = 0.076; // lorenz units -> world units
 const CENTER_Z = 23.83; // density centroid of z (measured) -> screen center
 const TIME_SCALE = 0.14; // real seconds -> lorenz time
 const MAX_STEP = 0.009; // Euler stability cap per frame
+const INTRO_DURATION = 3.5; // s: particles fill the screen, then converge onto the attractor
 const POINTER_RADIUS = 0.72; // world-space radius of the hover turbulence
 const SWIRL = 2.1; // hover swirl strength (world units / s)
 const PUSH = 0.88; // hover outward push strength (world units / s)
@@ -52,6 +53,11 @@ function start() {
   const jitter = new Float32Array(COUNT);
   const positions = new Float32Array(COUNT * 3);
   const colors = new Float32Array(COUNT * 3);
+  // per-particle intro offset: at load the cloud fills the screen; these decay
+  // to zero so the particles converge onto the already-formed attractor
+  const spreadX = new Float32Array(COUNT);
+  const spreadY = new Float32Array(COUNT);
+  const spreadZ = new Float32Array(COUNT);
 
   function respawn(i) {
     // scatter in a box around the attractor; the flow itself collapses the
@@ -64,6 +70,27 @@ function start() {
   for (let i = 0; i < COUNT; i++) {
     respawn(i);
     jitter[i] = 0.75 + Math.random() * 0.5; // desync so trails don't clump
+    // burn in so every particle already sits on the attractor at a varied
+    // phase — on load the only motion the viewer sees is the intro converging
+    let bx = state[i * 3];
+    let by = state[i * 3 + 1];
+    let bz = state[i * 3 + 2];
+    const burn = 150 + ((Math.random() * 700) | 0);
+    for (let k = 0; k < burn; k++) {
+      const vx = SIGMA * (by - bx);
+      const vy = bx * (RHO - bz) - by;
+      const vz = bx * by - BETA * bz;
+      bx += vx * 0.008;
+      by += vy * 0.008;
+      bz += vz * 0.008;
+    }
+    state[i * 3] = bx;
+    state[i * 3 + 1] = by;
+    state[i * 3 + 2] = bz;
+    // random start position filling (and slightly overflowing) the viewport
+    spreadX[i] = (Math.random() - 0.5) * 7.6;
+    spreadY[i] = (Math.random() - 0.5) * 4.6;
+    spreadZ[i] = (Math.random() - 0.5) * 7.6;
   }
 
   const geometry = new THREE.BufferGeometry();
@@ -121,7 +148,7 @@ function start() {
     camera.updateMatrixWorld();
   }
 
-  function stepParticles(delta) {
+  function stepParticles(delta, introK) {
     const dt = Math.min(delta, 0.05) * TIME_SCALE;
     const usePointer = !coarse && pointerAmt > 0.02;
     if (usePointer) raycaster.setFromCamera(ndc, camera);
@@ -201,9 +228,15 @@ function start() {
       state[i3] = x;
       state[i3 + 1] = y;
       state[i3 + 2] = z;
-      positions[i3] = px;
-      positions[i3 + 1] = py;
-      positions[i3 + 2] = pz;
+      if (introK > 0) {
+        positions[i3] = px + spreadX[i] * introK;
+        positions[i3 + 1] = py + spreadY[i] * introK;
+        positions[i3 + 2] = pz + spreadZ[i] * introK;
+      } else {
+        positions[i3] = px;
+        positions[i3 + 1] = py;
+        positions[i3 + 2] = pz;
+      }
 
       // color by local speed: violet (slow, wing tips) -> teal (fast, center)
       const speed = Math.sqrt(vx * vx + vy * vy + vz * vz);
@@ -233,6 +266,7 @@ function start() {
   // ---- render loop, paused when the hero is offscreen or the tab hidden ----
   const clock = new THREE.Clock();
   let elapsed = 0; // running total that excludes paused time (getDelta swallows the gap)
+  let introT = 0; // 0->1 over INTRO_DURATION; drives the spread-to-attractor intro
   let inView = true;
   let running = false;
   let rafId = 0;
@@ -241,10 +275,12 @@ function start() {
     rafId = requestAnimationFrame(frame);
     const delta = clock.getDelta();
     elapsed += delta;
+    introT = Math.min(1, introT + delta / INTRO_DURATION);
+    const introK = 1 - easeInOutCubic(introT);
     pointerAmt += (pointerTarget - pointerAmt) * Math.min(1, delta * 6);
-    material.opacity += (0.66 - material.opacity) * Math.min(1, delta * 1.1);
+    material.opacity += (0.66 - material.opacity) * Math.min(1, delta * 2.4);
     updateCamera(elapsed, delta);
-    stepParticles(delta);
+    stepParticles(delta, introK);
     renderer.render(scene, camera);
   }
 
@@ -268,6 +304,10 @@ function start() {
   });
 
   setRunning(true);
+}
+
+function easeInOutCubic(t) {
+  return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
 }
 
 function makeGlowSprite() {
